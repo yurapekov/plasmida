@@ -7,18 +7,24 @@ import subprocess
 # main program file
 
 class Species():
-    def __init__(self, id, name='new species'):
-        self.id = id
+    def __init__(self, name='new species'):
         self.name = name
         self.strainList = []
         self.consencus = ""
 
 class Strain():
-    def __init__(self, id, name='new strain'):
-        self.id = id
+    def __init__(self, name, seq, position):
         self.name = name
-        self.seq = ""
-        self.position = 0
+        self.seq = seq
+        self.position = position
+
+def parseString(line):
+    splitted = line.split()
+    species = splitted[0].split('|')[0]
+    strain = splitted[0].split('|')[1]
+    seq = splitted[1]
+    position = splitted[2]
+    return species, strain, seq, position
 
 def main():
     #[options]
@@ -39,6 +45,30 @@ def main():
         sys.exit(1)
 
     # END_OF [options]
+
+    #parse input file
+    speciesCount = -1
+    curSpecies = ''
+    curStrain = ''
+    speciesList = []
+    strainList = []
+    newSpecies = Species()
+
+    inFile = open(args.inFileName)
+    for line in inFile:
+        line = line.strip()
+        if not (line.startswith('CLUSTAL') or line.startswith('*') or line == ''):
+            species, strain, seq, position = parseString(line)
+            if species != newSpecies.name:
+                newSpecies = Species(species)
+                speciesList.append(newSpecies)
+                speciesCount += 1
+            newStrain = Strain(strain, seq, position)
+            speciesList[speciesCount].strainList.append(newStrain)
+    for spe in speciesList:
+         print(spe.name)
+         for st in spe.strainList:
+             print(st.name, st.seq)
 
     return 0
 # def main
