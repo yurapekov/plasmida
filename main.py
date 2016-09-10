@@ -6,6 +6,20 @@ import subprocess
 # project main
 # main program file
 
+class Species():
+    def __init__(self, id, name='new species'):
+        self.id = id
+        self.name = name
+        self.strainList = []
+        self.consencus = ""
+
+class Strain():
+    def __init__(self, id, name='new strain'):
+        self.id = id
+        self.name = name
+        self.seq = ""
+        self.position = 0
+
 def main():
     #[options]
     parser = argparse.ArgumentParser()
