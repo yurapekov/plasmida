@@ -74,14 +74,24 @@ def parseInputFile(args):
                 speciesCount += 1
             newStrain = Strain(strain, seq, position)
             speciesList[speciesCount].strainList.append(newStrain)
-            '''
-    for spe in speciesList:
-         print(spe.name)
-         for st in spe.strainList:
-             print(st.name, st.seq)
-            '''
     return speciesList
 
+def strainConsensus(bpList):
+    firstBp = bpList[0]
+    consensusBP = firstBp
+    for bp in bpList:
+        if bp != firstBp:
+            consensusBp = 'N'
+    return consensusBp
+
+def speciesConsensus(bpList):
+    bpListLen = len(bpList)
+    consensus = []
+    if 'N' in bpList:
+        consensus = ['*' for x in range(bpListLen)]
+    elif bpList.count(bpList[0]) == bpListLen:
+        consensus = ['*' for x in range(bpListLen)]
+    return consensus
 
 def main():
     #[options]
