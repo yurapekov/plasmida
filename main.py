@@ -11,7 +11,8 @@ class Species():
     def __init__(self, name='new species'):
         self.name = name
         self.strainList = []
-        self.consensus = "consensus"
+        self.consensus = '' 
+        self.checkCons = '' 
 
 class Strain():
     def __init__(self, name, seq, position):
@@ -52,7 +53,7 @@ def generateBigOutputFile(speciesList, args):
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
-        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+        outFile.write('%s%s%s\n\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
     outFile.close()
 
 def parseInputFile(args):
@@ -76,22 +77,38 @@ def parseInputFile(args):
             speciesList[speciesCount].strainList.append(newStrain)
     return speciesList
 
-def strainConsensus(bpList):
+def strainBpConsensus(bpList):
     firstBp = bpList[0]
-    consensusBP = firstBp
+    consensusBp = firstBp
     for bp in bpList:
         if bp != firstBp:
             consensusBp = 'N'
     return consensusBp
 
-def speciesConsensus(bpList):
+def speciesBpConsensus(bpList):
     bpListLen = len(bpList)
-    consensus = []
+    consensusBpList = []
     if 'N' in bpList:
-        consensus = ['*' for x in range(bpListLen)]
+        consensusBpList = ['*' for x in range(bpListLen)]
     elif bpList.count(bpList[0]) == bpListLen:
-        consensus = ['*' for x in range(bpListLen)]
-    return consensus
+        consensusBpList = ['*' for x in range(bpListLen)]
+    else:
+        consensusBpList = ['_' for x in range(bpListLen)]
+    return consensusBpList
+
+def getSpeciesConsensus(speciesList):
+    seqLen = len(speciesList[0].strainList[0].seq)
+    for species in speciesList:
+        for i in range(seqLen):
+            bpList = [strain.seq[i] for strain in species.strainList]
+            species.checkCons += strainBpConsensus(bpList)
+            
+    for i in range(seqLen):
+        bpList = [species.checkCons[i] for species in speciesList]
+        consensusBpList = speciesBpConsensus(bpList) 
+        for i, species in enumerate(speciesList):
+            species.consensus += consensusBpList[i]
+    return speciesList
 
 def main():
     #[options]
@@ -114,6 +131,7 @@ def main():
     # END_OF [options]
 
     speciesList = parseInputFile(args)
+    speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList)
     generateBigOutputFile(speciesList, args)
 
