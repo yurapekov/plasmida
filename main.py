@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.3
 
 import sys
+import os
 import argparse
 import subprocess
 # project main
@@ -33,6 +34,16 @@ def generateSmallOutputFile(speciesList):
         outFile.write('%s\n' % (species.strainList[0].seq))
         outFile.write('%s\n' % (species.consensus))
         outFile.close()
+
+def generateBigOutputFile(speciesList, args):
+    inFileNameWithoutExt, inFileExt = os.path.splitext(args.inFileName)
+    outFileName = '%s.%s%s' % (inFileNameWithoutExt, args.outSuffix, inFileExt)
+    outFile = open(outFileName, 'w')
+    for species in speciesList:
+        for strain in species.strainList:
+            outFile.write('%s|%s\t%s\t%s\n' % (species.name, strain.name, strain.seq, strain.position))
+        outFile.write('\t\t%s\t\t\n' % (species.consensus))
+    outFile.close()
 
 def parseInputFile(args):
     speciesCount = -1
@@ -70,10 +81,10 @@ def main():
                       type=str,
                       help = ' [str], no default value')
     parser.add_argument('-o',
-                      '--outFileName',
+                      '--outSuffix',
                       type=str,
-                      default = 'plasmida',
-                      help = ' [str], default value = plasmida')
+                      default = 'Consensus',
+                      help = ' [str], default value = Consensus')
     args = parser.parse_args()
 
     if args.inFileName == None:
@@ -84,6 +95,7 @@ def main():
 
     speciesList = parseInputFile(args)
     generateSmallOutputFile(speciesList)
+    generateBigOutputFile(speciesList, args)
 
     return 0
 # def main
