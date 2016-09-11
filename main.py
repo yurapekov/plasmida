@@ -10,7 +10,7 @@ class Species():
     def __init__(self, name='new species'):
         self.name = name
         self.strainList = []
-        self.consencus = ""
+        self.consensus = "consensus"
 
 class Strain():
     def __init__(self, name, seq, position):
@@ -26,7 +26,13 @@ def parseString(line):
     position = splitted[2]
     return species, strain, seq, position
 
-#def generateSmallOutputFile(outFileName, speciesList):
+def generateSmallOutputFile(speciesList):
+    for species in speciesList:
+        outFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
+        outFile = open(outFileName, 'w')
+        outFile.write('%s\n' % (species.strainList[0].seq))
+        outFile.write('%s\n' % (species.consensus))
+        outFile.close()
 
 def parseInputFile(args):
     speciesCount = -1
@@ -77,7 +83,7 @@ def main():
     # END_OF [options]
 
     speciesList = parseInputFile(args)
-
+    generateSmallOutputFile(speciesList)
 
     return 0
 # def main
