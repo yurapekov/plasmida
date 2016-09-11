@@ -26,6 +26,36 @@ def parseString(line):
     position = splitted[2]
     return species, strain, seq, position
 
+#def generateSmallOutputFile(outFileName, speciesList):
+
+def parseInputFile(args):
+    speciesCount = -1
+    curSpecies = ''
+    curStrain = ''
+    speciesList = []
+    strainList = []
+    newSpecies = Species()
+
+    inFile = open(args.inFileName)
+    for line in inFile:
+        line = line.strip()
+        if not (line.startswith('CLUSTAL') or line.startswith('*') or line == ''):
+            species, strain, seq, position = parseString(line)
+            if species != newSpecies.name:
+                newSpecies = Species(species)
+                speciesList.append(newSpecies)
+                speciesCount += 1
+            newStrain = Strain(strain, seq, position)
+            speciesList[speciesCount].strainList.append(newStrain)
+            '''
+    for spe in speciesList:
+         print(spe.name)
+         for st in spe.strainList:
+             print(st.name, st.seq)
+            '''
+    return speciesList
+
+
 def main():
     #[options]
     parser = argparse.ArgumentParser()
@@ -46,29 +76,8 @@ def main():
 
     # END_OF [options]
 
-    #parse input file
-    speciesCount = -1
-    curSpecies = ''
-    curStrain = ''
-    speciesList = []
-    strainList = []
-    newSpecies = Species()
+    speciesList = parseInputFile(args)
 
-    inFile = open(args.inFileName)
-    for line in inFile:
-        line = line.strip()
-        if not (line.startswith('CLUSTAL') or line.startswith('*') or line == ''):
-            species, strain, seq, position = parseString(line)
-            if species != newSpecies.name:
-                newSpecies = Species(species)
-                speciesList.append(newSpecies)
-                speciesCount += 1
-            newStrain = Strain(strain, seq, position)
-            speciesList[speciesCount].strainList.append(newStrain)
-    for spe in speciesList:
-         print(spe.name)
-         for st in spe.strainList:
-             print(st.name, st.seq)
 
     return 0
 # def main
