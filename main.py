@@ -28,17 +28,21 @@ def parseString(line):
     position = splitted[2]
     return species, strain, seq, position
 
+def getDataForSmallOutput(species):
+    seqPrint = ''
+    consensusPrint = ''
+    seqLen = len(species.strainList[0].seq)
+    for i in range(seqLen):
+        if species.strainList[0].seq[i] != '-':
+            seqPrint += species.strainList[0].seq[i]
+            consensusPrint += species.consensus[i]
+    return seqPrint, consensusPrint
+
 def generateSmallOutputFile(speciesList):
     for species in speciesList:
         outFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
         outFile = open(outFileName, 'w')
-        seqLen = len(species.strainList[0].seq)
-        seqPrint = ''
-        consensusPrint = ''
-        for i in range(seqLen):
-            if species.strainList[0].seq[i] != '-':
-                seqPrint += species.strainList[0].seq[i]
-                consensusPrint += species.consensus[i]
+        seqPrint, consensusPrint = getDataForSmallOutput(species)
         outFile.write('%s\n' % (seqPrint))
         outFile.write('%s\n' % (consensusPrint))
         outFile.close()
@@ -61,6 +65,17 @@ def generateBigOutputFile(speciesList, args):
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+
+    # debugging mode
+    if args.debuggingMode == 'y':
+        outFile.write('\n\n\n')
+        for species in speciesList:
+            smallOutFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
+            outFile.write('%s\n' % (smallOutFileName))
+            seqPrint, consensusPrint = getDataForSmallOutput(species)
+            outFile.write('%s\n' % (seqPrint))
+            outFile.write('%s\n' % (consensusPrint))
+            outFile.write('\n')
     outFile.close()
 
 def parseInputFile(args):
@@ -147,6 +162,11 @@ def main():
                       type=str,
                       default = 'Consensus',
                       help = ' [str], default value = Consensus')
+    parser.add_argument('-d',
+                      '--debuggingMode',
+                      type=str,
+                      default = 'n',
+                      help = ' [str], default value is "n", set "y" to generate debugging file instead of usual big file')
     args = parser.parse_args()
 
     if args.inFileName == None:
