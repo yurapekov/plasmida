@@ -32,8 +32,15 @@ def generateSmallOutputFile(speciesList):
     for species in speciesList:
         outFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
         outFile = open(outFileName, 'w')
-        outFile.write('%s\n' % (species.strainList[0].seq))
-        outFile.write('%s\n' % (species.consensus))
+        seqLen = len(species.strainList[0].seq)
+        seqPrint = ''
+        consensusPrint = ''
+        for i in range(seqLen):
+            if species.strainList[0].seq[i] != '-':
+                seqPrint += species.strainList[0].seq[i]
+                consensusPrint += species.consensus[i]
+        outFile.write('%s\n' % (seqPrint))
+        outFile.write('%s\n' % (consensusPrint))
         outFile.close()
 
 def generateBigOutputFile(speciesList, args):
@@ -53,7 +60,7 @@ def generateBigOutputFile(speciesList, args):
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
-        outFile.write('%s%s%s\n\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
     outFile.close()
 
 def parseInputFile(args):
@@ -112,12 +119,6 @@ def speciesBpConsensus(bpList):
                     else:
                         diffList.append(False)
             consensusBpList[i] = getDiff(diffList)
-        '''
-    elif bpList.count(bpList[0]) == bpListLen:
-        consensusBpList = ['*' for x in range(bpListLen)]
-    else:
-        consensusBpList = ['_' for x in range(bpListLen)]
-        '''
     return consensusBpList
 
 def getSpeciesConsensus(speciesList):
