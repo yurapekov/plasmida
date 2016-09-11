@@ -36,13 +36,23 @@ def generateSmallOutputFile(speciesList):
         outFile.close()
 
 def generateBigOutputFile(speciesList, args):
+    maxNameLen = 0
+    for species in speciesList:
+        for strain in species.strainList:
+            nameLen = len('%s|%s' % (species.name, strain.name))
+            if nameLen > maxNameLen:
+                maxNameLen = nameLen
+                
+    tabFirst = 2
+    tabSecond = 4
     inFileNameWithoutExt, inFileExt = os.path.splitext(args.inFileName)
     outFileName = '%s.%s%s' % (inFileNameWithoutExt, args.outSuffix, inFileExt)
     outFile = open(outFileName, 'w')
     for species in speciesList:
         for strain in species.strainList:
-            outFile.write('%s|%s\t%s\t%s\n' % (species.name, strain.name, strain.seq, strain.position))
-        outFile.write('\t\t%s\t\t\n' % (species.consensus))
+            combinedName = '%s|%s' % (species.name, strain.name)
+            outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
+        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
     outFile.close()
 
 def parseInputFile(args):
