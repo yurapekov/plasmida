@@ -85,15 +85,39 @@ def strainBpConsensus(bpList):
             consensusBp = 'N'
     return consensusBp
 
+def getDiff(diffList):
+    diff = ''
+    if len(diffList) == 0:
+        diff = '?'
+    elif diffList.count(True) == 2 and diffList.count(False) == 1:
+        diff = '?'
+    elif False in diffList:
+        diff = '*'
+    else:
+        diff = '_'
+    return diff
+
 def speciesBpConsensus(bpList):
     bpListLen = len(bpList)
-    consensusBpList = []
+    consensusBpList = ['0' for x in range(bpListLen)]
     if 'N' in bpList:
         consensusBpList = ['*' for x in range(bpListLen)]
+    else:
+        for i in range(bpListLen):
+            diffList = []
+            for k in range(bpListLen):
+                if k != i:
+                    if bpList[i] != bpList[k]:
+                        diffList.append(True)
+                    else:
+                        diffList.append(False)
+            consensusBpList[i] = getDiff(diffList)
+        '''
     elif bpList.count(bpList[0]) == bpListLen:
         consensusBpList = ['*' for x in range(bpListLen)]
     else:
         consensusBpList = ['_' for x in range(bpListLen)]
+        '''
     return consensusBpList
 
 def getSpeciesConsensus(speciesList):
