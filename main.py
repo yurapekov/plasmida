@@ -56,6 +56,8 @@ def getBigOutput(speciesList, outFile, space=0):
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+        for i in range(space):
+            outFile.write('\n')
 
 def generateSmallOutputFile(speciesList):
     for species in speciesList:
@@ -69,17 +71,23 @@ def generateBigOutputFile(speciesList, args):
     outFile = open(args.outFileName, 'w')
     getBigOutput(speciesList, outFile)
     outFile.close()
-'''
+
 def generateDebugFile(speciesList, args):
+    outFile = open(args.debugFileName, 'w')
+
+    # write small data
     for species in speciesList:
-        smallOutFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
-        outFile.write('%s\n' % (smallOutFileName))
+        outFile.write('%s\n' % (getSmallOutFileName(species)))
         seqPrint, consensusPrint = getSmallOutput(species)
         outFile.write('%s\n' % (seqPrint))
         outFile.write('%s\n' % (consensusPrint))
         outFile.write('\n')
     outFile.write('\n\n\n')
-'''
+
+    # write big data
+    getBigOutput(speciesList, outFile, space=1)
+
+    outFile.close()
 
 def parseInputFile(args):
     speciesCount = -1
@@ -163,7 +171,7 @@ def main():
     parser.add_argument('-o',
                       '--outFileName',
                       type=str,
-                      default = 'alignent.onsensus.txt',
+                      default = 'alignent.consensus.txt',
                       help = ' [str], default value = "alignment.consensus.txt"')
     parser.add_argument('-d',
                       '--debugFileName',
@@ -182,7 +190,7 @@ def main():
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList)
     generateBigOutputFile(speciesList, args)
-    #generatedebugFile(speciesList, args)
+    generateDebugFile(speciesList, args)
 
     return 0
 # def main
