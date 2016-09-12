@@ -25,7 +25,10 @@ def parseString(line):
     position = splitted[2]
     return species, strain, seq, position
 
-def getDataForSmallOutput(species):
+def getSmallOutFileName(species):
+    return '%s.%s.txt' % (species.name, species.strainList[0].name)
+
+def getSmallOutput(species):
     seqPrint = ''
     consensusPrint = ''
     seqLen = len(species.strainList[0].seq)
@@ -35,47 +38,48 @@ def getDataForSmallOutput(species):
             consensusPrint += species.consensus[i]
     return seqPrint, consensusPrint
 
-def generateSmallOutputFile(speciesList):
-    for species in speciesList:
-        outFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
-        outFile = open(outFileName, 'w')
-        seqPrint, consensusPrint = getDataForSmallOutput(species)
-        outFile.write('%s\n' % (seqPrint))
-        outFile.write('%s\n' % (consensusPrint))
-        outFile.close()
-
-def generateBigOutputFile(speciesList, args):
+def getBigOutput(speciesList, outFile, space=0):
+    # get maximal length of description (name of species + name of strain) in order to proper alignment
     maxNameLen = 0
     for species in speciesList:
         for strain in species.strainList:
             nameLen = len('%s|%s' % (species.name, strain.name))
             if nameLen > maxNameLen:
                 maxNameLen = nameLen
-                
+
+    # set spaces between columns
     tabFirst = 2
     tabSecond = 4
-    inFileNameWithoutExt, inFileExt = os.path.splitext(args.inFileName)
-    outFileName = '%s.%s%s' % (inFileNameWithoutExt, args.outSuffix, inFileExt)
-    outFile = open(outFileName, 'w')
+
     for species in speciesList:
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
-        if args.debuggingMode == 'y':
-            outFile.write('\n')
 
-    # debugging mode
-    if args.debuggingMode == 'y':
-        outFile.write('\n\n\n')
-        for species in speciesList:
-            smallOutFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
-            outFile.write('%s\n' % (smallOutFileName))
-            seqPrint, consensusPrint = getDataForSmallOutput(species)
-            outFile.write('%s\n' % (seqPrint))
-            outFile.write('%s\n' % (consensusPrint))
-            outFile.write('\n')
+def generateSmallOutputFile(speciesList):
+    for species in speciesList:
+        seqPrint, consensusPrint = getSmallOutput(species)
+        outFile = open(getSmallOutFileName(species), 'w')
+        outFile.write('%s\n' % (seqPrint))
+        outFile.write('%s\n' % (consensusPrint))
+        outFile.close()
+
+def generateBigOutputFile(speciesList, args):
+    outFile = open(args.outFileName, 'w')
+    getBigOutput(speciesList, outFile)
     outFile.close()
+'''
+def generateDebugFile(speciesList, args):
+    for species in speciesList:
+        smallOutFileName = '%s.%s.txt' % (species.name, species.strainList[0].name)
+        outFile.write('%s\n' % (smallOutFileName))
+        seqPrint, consensusPrint = getSmallOutput(species)
+        outFile.write('%s\n' % (seqPrint))
+        outFile.write('%s\n' % (consensusPrint))
+        outFile.write('\n')
+    outFile.write('\n\n\n')
+'''
 
 def parseInputFile(args):
     speciesCount = -1
@@ -157,15 +161,15 @@ def main():
                       type=str,
                       help = ' [str], no default value')
     parser.add_argument('-o',
-                      '--outSuffix',
+                      '--outFileName',
                       type=str,
-                      default = 'Consensus',
-                      help = ' [str], default value = Consensus')
+                      default = 'alignent.onsensus.txt',
+                      help = ' [str], default value = "alignment.consensus.txt"')
     parser.add_argument('-d',
-                      '--debuggingMode',
+                      '--debugFileName',
                       type=str,
-                      default = 'n',
-                      help = ' [str], default value is "n", set "y" to generate debugging file instead of usual big file')
+                      default = 'all.data.txt',
+                      help = ' [str], default value = "all.data.txt"')
     args = parser.parse_args()
 
     if args.inFileName == None:
@@ -178,6 +182,7 @@ def main():
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList)
     generateBigOutputFile(speciesList, args)
+    #generatedebugFile(speciesList, args)
 
     return 0
 # def main
