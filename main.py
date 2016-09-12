@@ -3,9 +3,6 @@
 import sys
 import os
 import argparse
-import subprocess
-# project main
-# main program file
 
 class Species():
     def __init__(self, name='new species'):
@@ -65,6 +62,8 @@ def generateBigOutputFile(speciesList, args):
             combinedName = '%s|%s' % (species.name, strain.name)
             outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+        if args.debuggingMode == 'y':
+            outFile.write('\n')
 
     # debugging mode
     if args.debuggingMode == 'y':
@@ -111,12 +110,12 @@ def getDiff(diffList):
     diff = ''
     if len(diffList) == 0:
         diff = '?'
-    elif diffList.count(True) == 2 and diffList.count(False) == 1:
+    elif diffList.count(True) >= 2 and diffList.count(False) >= 1:
         diff = '?'
     elif False in diffList:
         diff = '*'
     else:
-        diff = '_'
+        diff = '-'
     return diff
 
 def speciesBpConsensus(bpList):
