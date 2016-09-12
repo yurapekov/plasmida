@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import collections
 
 class Species():
     def __init__(self, name='new species'):
@@ -122,19 +123,27 @@ def getDiff(diffList):
     diff = ''
     if len(diffList) == 0:
         diff = '?'
-    elif diffList.count(True) >= 2 and diffList.count(False) >= 1:
-        diff = '?'
     elif False in diffList:
         diff = '*'
     else:
         diff = '-'
     return diff
 
+def checkTwoPairs(bpList):
+    commonList = collections.Counter(bpList).most_common(2)
+    if len(commonList) == 2 and commonList[0][1] >= 2 and commonList[1][1] >= 2:
+        atLeastTwoPairs = True
+    else:
+        atLeastTwoPairs = False
+    return atLeastTwoPairs
+
 def speciesBpConsensus(bpList):
     bpListLen = len(bpList)
     consensusBpList = ['0' for x in range(bpListLen)]
     if 'N' in bpList:
         consensusBpList = ['*' for x in range(bpListLen)]
+    elif checkTwoPairs(bpList):
+        consensusBpList = ['?' for x in range(bpListLen)]
     else:
         for i in range(bpListLen):
             diffList = []
