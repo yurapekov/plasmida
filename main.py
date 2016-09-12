@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import collections
 
 class Species():
     def __init__(self, name='new species'):
@@ -122,19 +123,27 @@ def getDiff(diffList):
     diff = ''
     if len(diffList) == 0:
         diff = '?'
-    elif diffList.count(True) >= 2 and diffList.count(False) >= 1:
-        diff = '?'
     elif False in diffList:
         diff = '*'
     else:
         diff = '-'
     return diff
 
+def checkTwoPairs(bpList):
+    commonList = collections.Counter(bpList).most_common(2)
+    if len(commonList) == 2 and commonList[0][1] >= 2 and commonList[1][1] >= 2:
+        atLeastTwoPairs = True
+    else:
+        atLeastTwoPairs = False
+    return atLeastTwoPairs
+
 def speciesBpConsensus(bpList):
     bpListLen = len(bpList)
     consensusBpList = ['0' for x in range(bpListLen)]
     if 'N' in bpList:
         consensusBpList = ['*' for x in range(bpListLen)]
+    elif checkTwoPairs(bpList):
+        consensusBpList = ['?' for x in range(bpListLen)]
     else:
         for i in range(bpListLen):
             diffList = []
@@ -148,17 +157,26 @@ def speciesBpConsensus(bpList):
     return consensusBpList
 
 def getSpeciesConsensus(speciesList):
+    # get subsidiary string with strain consensus for each species
     seqLen = len(speciesList[0].strainList[0].seq)
     for species in speciesList:
         for i in range(seqLen):
             bpList = [strain.seq[i] for strain in species.strainList]
             species.checkCons += strainBpConsensus(bpList)
-            
+    
+    # get species consensus for each species
     for i in range(seqLen):
         bpList = [species.checkCons[i] for species in speciesList]
         consensusBpList = speciesBpConsensus(bpList) 
-        for i, species in enumerate(speciesList):
-            species.consensus += consensusBpList[i]
+        for k, species in enumerate(speciesList):
+            species.consensus += consensusBpList[k]
+
+    # replace '*' to '>' in case of gaps in strain consensus
+    for i in range(seqLen):
+        for species in speciesList:
+            if species.checkCons[i] == '-':
+                species.consensus = species.consensus[:i] + '>' + species.consensus[i+1:]
+
     return speciesList
 
 def main():
@@ -171,7 +189,7 @@ def main():
     parser.add_argument('-o',
                       '--outFileName',
                       type=str,
-                      default = 'alignent.consensus.txt',
+                      default = 'alignment.consensus.txt',
                       help = ' [str], default value = "alignment.consensus.txt"')
     parser.add_argument('-d',
                       '--debugFileName',
