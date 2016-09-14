@@ -13,10 +13,13 @@ class Species():
         self.checkCons = [] 
 
 class Strain():
-    def __init__(self, name, seq, position):
+    def __init__(self, name, start):
         self.name = name # str
-        self.seq = seq # list
-        self.position = position # str
+        self.start = start # int
+        self.seq = [] # list
+
+def calcSeqLen(seq):
+    return len(seq) - seq.count('-')
 
 def parseString(line):
     splitted = line.split()
@@ -91,24 +94,37 @@ def generateDebugFile(speciesList, args):
     outFile.close()
 
 def parseInputFile(args):
-    speciesCount = -1
-    curSpecies = ''
-    curStrain = ''
     speciesList = []
-    strainList = []
-    newSpecies = Species()
-
     inFile = open(args.inFileName)
     for line in inFile:
         line = line.strip()
         if not (line.startswith('CLUSTAL') or line.startswith('*') or line == ''):
-            species, strain, seq, position = parseString(line)
-            if species != newSpecies.name:
-                newSpecies = Species(species)
+            curSpecies, curStrain, seq, position = parseString(line)
+
+            # check if species already in the list, then define index of found species or create new species
+            speciesIndex = -1
+            for i, species in enumerate(speciesList):
+                if curSpecies == species.name:
+                    speciesIndex = i
+            if speciesIndex == -1:
+                newSpecies = Species(curSpecies)
                 speciesList.append(newSpecies)
-                speciesCount += 1
-            newStrain = Strain(strain, seq, position)
-            speciesList[speciesCount].strainList.append(newStrain)
+                speciesIndex = len(speciesList) - 1
+
+            # check if strain already in the list, then define index of found strain or create new strain
+            strainIndex = -1
+            for i, strain in enumerate(speciesList[speciesIndex].strainList):
+                if curStrain == strain.name:
+                    strainIndex = i
+            if strainIndex == -1:
+                start = int(position) - calcSeqLen(seq) + 1
+                newStrain = Strain(curStrain, start)
+                speciesList[speciesIndex].strainList.append(newStrain)
+                strainIndex = len(speciesList[speciesIndex].strainList) - 1
+
+            # add seq to strain
+            speciesList[speciesIndex].strainList[strainIndex].seq.extend(seq)
+
     return speciesList
 
 def strainBpConsensus(bpList):
@@ -205,10 +221,18 @@ def main():
     # END_OF [options]
 
     speciesList = parseInputFile(args)
+    '''
+    for species in speciesList:
+        print(species.name)
+        for strain in species.strainList:
+            print(strain.name + '\n' + ''.join(strain.seq))
+        print('\n')
+    '''
+
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList)
-    generateBigOutputFile(speciesList, args)
-    generateDebugFile(speciesList, args)
+    #generateBigOutputFile(speciesList, args)
+    #generateDebugFile(speciesList, args)
 
     return 0
 # def main
