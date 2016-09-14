@@ -32,6 +32,9 @@ def parseString(line):
 def getSmallOutFileName(species):
     return '%s.%s.txt' % (species.name, species.strainList[0].name)
 
+def getGapCountFileName(species):
+    return '%s.%s.divis.txt' % (species.name, species.strainList[0].name)
+
 def checkNoGapInSmallOutput(species, k):
     noGap = True
     if species.strainList[0].seq[k] == '-':
@@ -39,13 +42,13 @@ def checkNoGapInSmallOutput(species, k):
     return noGap
 
 def printBlockInSmallOutput(species, outFile, start, end):
-    for k in range(start, end):
-        if checkNoGapInSmallOutput(species, k):
-            outFile.write(species.strainList[0].seq[k])
+    for i in range(start, end):
+        if checkNoGapInSmallOutput(species, i):
+            outFile.write(species.strainList[0].seq[i])
     outFile.write('\n')
-    for k in range(start, end):
-        if checkNoGapInSmallOutput(species, k):
-            outFile.write(species.consensus[k])
+    for i in range(start, end):
+        if checkNoGapInSmallOutput(species, i):
+            outFile.write(species.consensus[i])
     outFile.write('\n')
 
 def getSmallOutput(species, outFile, args):
@@ -54,6 +57,22 @@ def getSmallOutput(species, outFile, args):
         printBlockInSmallOutput(species, outFile, i - args.blockLen, i)
         outFile.write('\n')
     printBlockInSmallOutput(species, outFile, i, seqLen)
+
+def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
+    tabBetween = 3
+    if tab > 0:
+        outFile.write(''.ljust(tab))
+        tabBetween = args.gapCountLen
+    for i in range(start + args.gapCountLen, end, args.gapCountLen):
+        outFile.write(str(species.consensus[i - args.gapCountLen:i].count('-')).ljust(tabBetween))
+    outFile.write(str(species.consensus[i:end].count('-')).ljust(tabBetween))
+    outFile.write('\n')
+
+def getGapCountOutput(species, outFile, args):
+    seqLen = len(species.strainList[0].seq)
+    for i in range(args.blockLen, seqLen, args.blockLen):
+        printBlockInGapCountOutput(species, outFile, args, i - args.blockLen, i)
+    printBlockInGapCountOutput(species, outFile, args, i, seqLen)
 
 def getBigOutput(speciesList, outFile, args, space=0):
     seqLen = len(speciesList[0].strainList[0].seq)
@@ -67,10 +86,10 @@ def getBigOutput(speciesList, outFile, args, space=0):
                 maxNameLen = nameLen
 
     for i in range(args.blockLen, seqLen, args.blockLen):
-        printBlockInBigOutput(speciesList, outFile, maxNameLen, space, i - args.blockLen, i) 
-    printBlockInBigOutput(speciesList, outFile, maxNameLen, space, i, seqLen) 
+        printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i - args.blockLen, i) 
+    printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i, seqLen) 
 
-def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, start, end):
+def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, start, end):
     # set spaces between columns
     tabFirst = 6
     tabSecond = 3
@@ -81,6 +100,8 @@ def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, start, end):
             position = strain.start + getSeqLen(strain.seq[0:end])
             outFile.write('%s%s%s%s%d\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq[start:end]), ''.ljust(tabSecond), position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus[start:end])))
+        if space > 0:
+            printBlockInGapCountOutput(species, outFile, args, start, end, tab=tabFirst + maxNameLen)
         for i in range(space):
             outFile.write('\n')
     outFile.write('\n\n')
@@ -89,6 +110,12 @@ def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
         outFile = open(getSmallOutFileName(species), 'w')
         getSmallOutput(species, outFile, args)
+        outFile.close()
+
+def generateGapCountFile(speciesList, args):
+    for species in speciesList:
+        outFile = open(getGapCountFileName(species), 'w')
+        getGapCountOutput(species, outFile, args)
         outFile.close()
 
 def generateBigOutputFile(speciesList, args):
@@ -235,10 +262,19 @@ def main():
                       type=int,
                       default = 60,
                       help = 'Length of output alignment block [int], default value = 60')
+    parser.add_argument('-g',
+                      '--gapCountLen',
+                      type=int,
+                      default = 20,
+                      help = 'Length of alignment block in which we count gaps [int], default value = 20')
     args = parser.parse_args()
 
     if args.inFileName == None:
         print("Please, define --inFileName parameter. To read help use -h. Program is broken.")
+        sys.exit(1)
+        
+    if args.gapCountLen > args.blockLen:
+        print("gapCountLen should be less or equal to blockLen. Please, define another --gapCountLen parameter. To read help use -h. Program is broken.")
         sys.exit(1)
 
     # END_OF [options]
@@ -246,6 +282,7 @@ def main():
     speciesList = parseInputFile(args)
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList, args)
+    generateGapCountFile(speciesList, args)
     generateBigOutputFile(speciesList, args)
     generateDebugFile(speciesList, args)
 
