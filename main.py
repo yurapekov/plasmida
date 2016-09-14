@@ -18,7 +18,7 @@ class Strain():
         self.start = start # int
         self.seq = [] # list
 
-def calcSeqLen(seq):
+def getSeqLen(seq):
     return len(seq) - seq.count('-')
 
 def parseString(line):
@@ -72,13 +72,14 @@ def getBigOutput(speciesList, outFile, args, space=0):
 
 def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, start, end):
     # set spaces between columns
-    tabFirst = 2
-    tabSecond = 4
+    tabFirst = 6
+    tabSecond = 3
 
     for species in speciesList:
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
-            outFile.write('%s%s%s%s%d\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq[start:end]), ''.ljust(tabSecond), strain.start))
+            position = strain.start + getSeqLen(strain.seq[0:end])
+            outFile.write('%s%s%s%s%d\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq[start:end]), ''.ljust(tabSecond), position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus[start:end])))
         for i in range(space):
             outFile.write('\n')
@@ -134,7 +135,7 @@ def parseInputFile(args):
                 if curStrain == strain.name:
                     strainIndex = i
             if strainIndex == -1:
-                start = int(position) - calcSeqLen(seq) + 1
+                start = int(position) - getSeqLen(seq)
                 newStrain = Strain(curStrain, start)
                 speciesList[speciesIndex].strainList.append(newStrain)
                 strainIndex = len(speciesList[speciesIndex].strainList) - 1
