@@ -32,29 +32,30 @@ def parseString(line):
 def getSmallOutFileName(species):
     return '%s.%s.txt' % (species.name, species.strainList[0].name)
 
-def getSmallOutput(species, args):
-    smallPrint = []
-    seqBlock = []
-    consensusBlock = []
-    seqLen = len(species.strainList[0].seq)
-    for i in range(seqLen):
-        if i%60 == 0:
-            if len(seqBlock) > 0:
-                smallPrint.append(''.join(seqBlock))
-                smallPrint.append(''.join(consensusBlock))
-                smallPrint.append('')
-            seqBlock = []
-            consensusBlock = []
-        if species.strainList[0].seq[i] != '-':
-            seqBlock += species.strainList[0].seq[i]
-            consensusBlock += species.consensus[i]
-    if len(seqBlock) > 0:
-        smallPrint.append(''.join(seqBlock))
-        smallPrint.append(''.join(consensusBlock))
-        smallPrint.append('')
-    return smallPrint
+def checkNoGapInSmallOutput(species, k):
+    noGap = True
+    if species.strainList[0].seq[k] == '-':
+        noGap = False
+    return noGap
 
-def getBigOutput(speciesList, outFile, space=0):
+def printBlockInSmallOutput(species, outFile, start, end):
+    for k in range(start, end):
+        if checkNoGapInSmallOutput(species, k):
+            outFile.write(species.strainList[0].seq[k])
+    outFile.write('\n')
+    for k in range(start, end):
+        if checkNoGapInSmallOutput(species, k):
+            outFile.write(species.consensus[k])
+    outFile.write('\n')
+
+def getSmallOutput(species, outFile, args):
+    seqLen = len(species.strainList[0].seq)
+    for i in range(args.blockLen, seqLen, args.blockLen):
+        printBlockInSmallOutput(species, outFile, i - args.blockLen, i)
+        outFile.write('\n')
+    printBlockInSmallOutput(species, outFile, i, seqLen)
+
+def getBigOutput(speciesList, outFile, args, space=0):
     # get maximal length of description (name of species + name of strain) in order to proper alignment
     maxNameLen = 0
     for species in speciesList:
@@ -77,14 +78,13 @@ def getBigOutput(speciesList, outFile, space=0):
 
 def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
-        smallPrint = getSmallOutput(species, args)
         outFile = open(getSmallOutFileName(species), 'w')
-        outFile.write('\n'.join(smallPrint))
+        getSmallOutput(species, outFile, args)
         outFile.close()
 
 def generateBigOutputFile(speciesList, args):
     outFile = open(args.outFileName, 'w')
-    getBigOutput(speciesList, outFile)
+    getBigOutput(speciesList, outFile, args)
     outFile.close()
 
 def generateDebugFile(speciesList, args):
@@ -100,7 +100,7 @@ def generateDebugFile(speciesList, args):
     outFile.write('\n\n\n')
 
     # write big data
-    getBigOutput(speciesList, outFile, space=1)
+    getBigOutput(speciesList, outFile, args, space=1)
 
     outFile.close()
 
@@ -224,10 +224,10 @@ def main():
                       default = 'all.data.txt',
                       help = ' [str], default value = "all.data.txt"')
     parser.add_argument('-b',
-                      '--outputBlockLen',
+                      '--blockLen',
                       type=int,
                       default = 60,
-                      help = ' [int], default value = 60')
+                      help = 'Length of output alignment block [int], default value = 60')
     args = parser.parse_args()
 
     if args.inFileName == None:
