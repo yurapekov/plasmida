@@ -82,7 +82,7 @@ def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, start, end):
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus[start:end])))
         for i in range(space):
             outFile.write('\n')
-    outFile.write('\n')
+    outFile.write('\n\n')
 
 def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
@@ -101,9 +101,7 @@ def generateDebugFile(speciesList, args):
     # write small data
     for species in speciesList:
         outFile.write('%s\n' % (getSmallOutFileName(species)))
-        seqPrint, consensusPrint = getSmallOutput(species)
-        outFile.write('%s\n' % (seqPrint))
-        outFile.write('%s\n' % (consensusPrint))
+        getSmallOutput(species, outFile, args)
         outFile.write('\n')
     outFile.write('\n\n\n')
 
@@ -245,17 +243,10 @@ def main():
     # END_OF [options]
 
     speciesList = parseInputFile(args)
-    '''
-    for species in speciesList:
-        print(species.name)
-        for strain in species.strainList:
-            print(strain.name + '\n' + ''.join(strain.seq))
-        print('\n')
-    '''
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList, args)
     generateBigOutputFile(speciesList, args)
-    #generateDebugFile(speciesList, args)
+    generateDebugFile(speciesList, args)
 
     return 0
 # def main
