@@ -9,20 +9,20 @@ class Species():
     def __init__(self, name='new species'):
         self.name = name
         self.strainList = []
-        self.consensus = '' 
-        self.checkCons = '' 
+        self.consensus = []
+        self.checkCons = [] 
 
 class Strain():
     def __init__(self, name, seq, position):
-        self.name = name
-        self.seq = seq
-        self.position = position
+        self.name = name # str
+        self.seq = seq # list
+        self.position = position # str
 
 def parseString(line):
     splitted = line.split()
     species = splitted[0].split('|')[0]
     strain = splitted[0].split('|')[1]
-    seq = splitted[1]
+    seq = list(splitted[1])
     position = splitted[2]
     return species, strain, seq, position
 
@@ -55,8 +55,8 @@ def getBigOutput(speciesList, outFile, space=0):
     for species in speciesList:
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
-            outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), strain.seq, ''.ljust(tabSecond), strain.position))
-        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), species.consensus))
+            outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq), ''.ljust(tabSecond), strain.position))
+        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus)))
         for i in range(space):
             outFile.write('\n')
 
@@ -175,7 +175,7 @@ def getSpeciesConsensus(speciesList):
     for i in range(seqLen):
         for species in speciesList:
             if species.checkCons[i] == '-':
-                species.consensus = species.consensus[:i] + '>' + species.consensus[i+1:]
+                species.consensus[i] = '>'
 
     return speciesList
 
