@@ -56,6 +56,8 @@ def getSmallOutput(species, outFile, args):
     printBlockInSmallOutput(species, outFile, i, seqLen)
 
 def getBigOutput(speciesList, outFile, args, space=0):
+    seqLen = len(speciesList[0].strainList[0].seq)
+
     # get maximal length of description (name of species + name of strain) in order to proper alignment
     maxNameLen = 0
     for species in speciesList:
@@ -64,6 +66,11 @@ def getBigOutput(speciesList, outFile, args, space=0):
             if nameLen > maxNameLen:
                 maxNameLen = nameLen
 
+    for i in range(args.blockLen, seqLen, args.blockLen):
+        printBlockInBigOutput(speciesList, outFile, maxNameLen, space, i - args.blockLen, i) 
+    printBlockInBigOutput(speciesList, outFile, maxNameLen, space, i, seqLen) 
+
+def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, start, end):
     # set spaces between columns
     tabFirst = 2
     tabSecond = 4
@@ -71,10 +78,11 @@ def getBigOutput(speciesList, outFile, args, space=0):
     for species in speciesList:
         for strain in species.strainList:
             combinedName = '%s|%s' % (species.name, strain.name)
-            outFile.write('%s%s%s%s%s\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq), ''.ljust(tabSecond), strain.position))
-        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus)))
+            outFile.write('%s%s%s%s%d\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq[start:end]), ''.ljust(tabSecond), strain.start))
+        outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus[start:end])))
         for i in range(space):
             outFile.write('\n')
+    outFile.write('\n')
 
 def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
@@ -246,7 +254,7 @@ def main():
     '''
     speciesList = getSpeciesConsensus(speciesList)
     generateSmallOutputFile(speciesList, args)
-    #generateBigOutputFile(speciesList, args)
+    generateBigOutputFile(speciesList, args)
     #generateDebugFile(speciesList, args)
 
     return 0
