@@ -53,6 +53,7 @@ def printBlockInSmallOutput(species, outFile, start, end):
 
 def getSmallOutput(species, outFile, args):
     seqLen = len(species.strainList[0].seq)
+    i = 0
     for i in range(args.blockLen, seqLen, args.blockLen):
         printBlockInSmallOutput(species, outFile, i - args.blockLen, i)
         outFile.write('\n')
@@ -63,6 +64,7 @@ def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
     if tab > 0:
         outFile.write(''.ljust(tab))
         tabBetween = args.gapCountLen
+    i = start
     for i in range(start + args.gapCountLen, end, args.gapCountLen):
         outFile.write(str(species.consensus[i - args.gapCountLen:i].count('-')).ljust(tabBetween))
     outFile.write(str(species.consensus[i:end].count('-')).ljust(tabBetween))
@@ -70,6 +72,7 @@ def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
 
 def getGapCountOutput(species, outFile, args):
     seqLen = len(species.strainList[0].seq)
+    i = 0
     for i in range(args.blockLen, seqLen, args.blockLen):
         printBlockInGapCountOutput(species, outFile, args, i - args.blockLen, i)
     printBlockInGapCountOutput(species, outFile, args, i, seqLen)
@@ -85,6 +88,7 @@ def getBigOutput(speciesList, outFile, args, space=0):
             if nameLen > maxNameLen:
                 maxNameLen = nameLen
 
+    i = 0
     for i in range(args.blockLen, seqLen, args.blockLen):
         printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i - args.blockLen, i) 
     printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i, seqLen) 
