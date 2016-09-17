@@ -67,6 +67,8 @@ def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
     i = start
     for i in range(start + args.gapCountLen, end, args.gapCountLen):
         outFile.write(str(species.consensus[i - args.gapCountLen:i].count('-')).ljust(tabBetween))
+        if tab == 0:
+            outFile.write('\n')
     outFile.write(str(species.consensus[i:end].count('-')).ljust(tabBetween))
     outFile.write('\n')
 
@@ -174,11 +176,14 @@ def parseInputFile(args):
     return speciesList
 
 def strainBpConsensus(bpList):
-    firstBp = bpList[0]
-    consensusBp = firstBp
-    for bp in bpList:
-        if bp != firstBp:
-            consensusBp = 'N'
+    if '-' in bpList:
+        consensusBp = '>'
+    else:
+        firstBp = bpList[0]
+        consensusBp = firstBp
+        for bp in bpList:
+            if bp != firstBp:
+                consensusBp = 'N'
     return consensusBp
 
 def getDiff(diffList):
@@ -236,7 +241,7 @@ def getSpeciesConsensus(speciesList):
     # replace '*' to '>' in case of gaps in strain consensus
     for i in range(seqLen):
         for species in speciesList:
-            if species.checkCons[i] == '-':
+            if species.checkCons[i] == '>':
                 species.consensus[i] = '>'
 
     return speciesList
