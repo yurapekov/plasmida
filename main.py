@@ -111,23 +111,23 @@ def printBlockInBigOutput(speciesList, outFile, maxNameLen, args, start, end):
 
 def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
-        outFile = open(getSmallOutFileName(species), 'w')
+        outFile = open(getSmallOutFileName(species), 'w', newline = args.lineBreakFormat)
         getSmallOutput(species, outFile, args)
         outFile.close()
 
 def generateGapCountFile(speciesList, args):
     for species in speciesList:
-        outFile = open(getGapCountFileName(species), 'w')
+        outFile = open(getGapCountFileName(species), 'w', newline = args.lineBreakFormat)
         getGapCountOutput(species, outFile, args)
         outFile.close()
 
 def generateBigOutputFile(speciesList, args):
-    outFile = open(args.outFileName, 'w')
+    outFile = open(args.outFileName, 'w', newline = args.lineBreakFormat)
     getBigOutput(speciesList, outFile, args)
     outFile.close()
 
 def generateDebugFile(speciesList, args):
-    outFile = open(args.debugFileName, 'w')
+    outFile = open(args.debugFileName, 'w', newline = args.lineBreakFormat)
 
     # write small data
     for species in speciesList:
@@ -273,14 +273,27 @@ def main():
                       type=int,
                       default = 20,
                       help = 'Length of alignment block in which we count gaps [int], default value = 20')
+    parser.add_argument('-f',
+                      '--lineBreakFormat',
+                      type=str,
+                      default = 'u',
+                      help = 'Type of line breaks: "u" for unix "\\n", "w" for windows "\\r\\n" [str], default value = "u"')
     args = parser.parse_args()
 
     if args.inFileName == None:
-        print("Please, define --inFileName parameter. To read help use -h. Program is broken.")
+        print('Please, define --inFileName parameter. To read help use -h. Program is broken.')
+        sys.exit(1)
+
+    if args.lineBreakFormat == 'u':
+        args.lineBreakFormat = '\n'
+    elif args.lineBreakFormat == 'w':
+        args.lineBreakFormat = '\r\n'
+    else:
+        print('Type of line breaks: "u" for unix "\\n", "w" for windows "\\r\\n". Please, set another --lineBreakFormat parameter. To read help use -h. Program is broken.')
         sys.exit(1)
         
     if args.gapCountLen > args.blockLen:
-        print("gapCountLen should be less or equal to blockLen. Please, define another --gapCountLen parameter. To read help use -h. Program is broken.")
+        print('gapCountLen should be less or equal to blockLen. Please, define another --gapCountLen parameter. To read help use -h. Program is broken.')
         sys.exit(1)
 
     # END_OF [options]
