@@ -77,7 +77,7 @@ def getGapCountOutput(species, outFile, args):
         printBlockInGapCountOutput(species, outFile, args, i - args.blockLen, i)
     printBlockInGapCountOutput(species, outFile, args, i, seqLen)
 
-def getBigOutput(speciesList, outFile, args, space=0):
+def getBigOutput(speciesList, outFile, args):
     seqLen = len(speciesList[0].strainList[0].seq)
 
     # get maximal length of description (name of species + name of strain) in order to proper alignment
@@ -90,10 +90,10 @@ def getBigOutput(speciesList, outFile, args, space=0):
 
     i = 0
     for i in range(args.blockLen, seqLen, args.blockLen):
-        printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i - args.blockLen, i) 
-    printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, i, seqLen) 
+        printBlockInBigOutput(speciesList, outFile, maxNameLen, args, i - args.blockLen, i) 
+    printBlockInBigOutput(speciesList, outFile, maxNameLen, args, i, seqLen) 
 
-def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, start, end):
+def printBlockInBigOutput(speciesList, outFile, maxNameLen, args, start, end):
     # set spaces between columns
     tabFirst = 6
     tabSecond = 3
@@ -104,10 +104,7 @@ def printBlockInBigOutput(speciesList, outFile, maxNameLen, space, args, start, 
             position = strain.start + getSeqLen(strain.seq[0:end])
             outFile.write('%s%s%s%s%d\n' % (combinedName.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(strain.seq[start:end]), ''.ljust(tabSecond), position))
         outFile.write('%s%s%s\n' % (''.ljust(maxNameLen), ''.ljust(tabFirst), ''.join(species.consensus[start:end])))
-        if space > 0:
-            printBlockInGapCountOutput(species, outFile, args, start, end, tab=tabFirst + maxNameLen)
-        for i in range(space):
-            outFile.write('\n')
+        printBlockInGapCountOutput(species, outFile, args, start, end, tab=tabFirst + maxNameLen)
     outFile.write('\n\n')
 
 def generateSmallOutputFile(speciesList, args):
@@ -138,7 +135,7 @@ def generateDebugFile(speciesList, args):
     outFile.write('\n\n\n')
 
     # write big data
-    getBigOutput(speciesList, outFile, args, space=1)
+    getBigOutput(speciesList, outFile, args)
 
     outFile.close()
 
