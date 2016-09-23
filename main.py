@@ -23,17 +23,14 @@ def getSeqLen(seq):
 
 def parseString(line):
     splitted = line.split()
-    species = splitted[0].split('|')[0]
-    strain = splitted[0].split('|')[1]
+    species = splitted[0].split('|', 1)[0]
+    strain = splitted[0].split('|', 1)[1]
     seq = list(splitted[1])
     position = splitted[2]
     return species, strain, seq, position
 
-def getSmallOutFileName(species):
-    return '%s.%s.txt' % (species.name, species.strainList[0].name)
-
-def getGapCountFileName(species):
-    return '%s.%s.divis.txt' % (species.name, species.strainList[0].name)
+def getSmallOutFileName(species, suffix=''):
+    return '%s.%s.%stxt' % (species.name.replace('|','.'), species.strainList[0].name.replace('|', '.'), suffix)
 
 def checkNoGapInSmallOutput(species, k):
     noGap = True
@@ -60,7 +57,7 @@ def getSmallOutput(species, outFile, args):
     printBlockInSmallOutput(species, outFile, i, seqLen)
 
 def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
-    tabBetween = 3
+    tabBetween = 0
     if tab > 0:
         outFile.write(''.ljust(tab))
         tabBetween = args.gapCountLen
@@ -117,7 +114,7 @@ def generateSmallOutputFile(speciesList, args):
 
 def generateGapCountFile(speciesList, args):
     for species in speciesList:
-        outFile = open(getGapCountFileName(species), 'w', newline = args.lineBreakFormat)
+        outFile = open(getSmallOutFileName(species, suffix='divis.'), 'w', newline = args.lineBreakFormat)
         getGapCountOutput(species, outFile, args)
         outFile.close()
 
@@ -133,8 +130,7 @@ def generateDebugFile(speciesList, args):
     for species in speciesList:
         outFile.write('%s\n' % (getSmallOutFileName(species)))
         getSmallOutput(species, outFile, args)
-        outFile.write('\n')
-    outFile.write('\n\n\n')
+        outFile.write('\n\n\n\n\n')
 
     # write big data
     getBigOutput(speciesList, outFile, args)
@@ -251,31 +247,31 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i',
                       '--inFileName',
-                      type=str,
+                      type = str,
                       help = ' [str], no default value')
     parser.add_argument('-o',
                       '--outFileName',
-                      type=str,
-                      default = 'alignment.consensus.txt',
-                      help = ' [str], default value = "alignment.consensus.txt"')
+                      type = str,
+                      default = 'Alignment.consensus.txt',
+                      help = ' [str], default value = "Alignment.consensus.txt"')
     parser.add_argument('-d',
                       '--debugFileName',
-                      type=str,
-                      default = 'all.data.txt',
-                      help = ' [str], default value = "all.data.txt"')
+                      type = str,
+                      default = 'All.data.txt',
+                      help = ' [str], default value = "All.data.txt"')
     parser.add_argument('-b',
                       '--blockLen',
-                      type=int,
+                      type = int,
                       default = 60,
                       help = 'Length of output alignment block [int], default value = 60')
     parser.add_argument('-g',
                       '--gapCountLen',
-                      type=int,
+                      type = int,
                       default = 20,
                       help = 'Length of alignment block in which we count gaps [int], default value = 20')
     parser.add_argument('-f',
                       '--lineBreakFormat',
-                      type=str,
+                      type = str,
                       default = 'u',
                       help = 'Type of line breaks: "u" for unix "\\n", "w" for windows "\\r\\n" [str], default value = "u"')
     args = parser.parse_args()
