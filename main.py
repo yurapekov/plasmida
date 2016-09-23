@@ -5,22 +5,26 @@ import os
 import argparse
 import collections
 
+# class for each species
 class Species():
     def __init__(self, name='new species'):
-        self.name = name
-        self.strainList = []
-        self.consensus = []
-        self.checkCons = [] 
+        self.name = name # name of species
+        self.strainList = [] # list of strains for this species
+        self.consensus = [] # output consensus for this species
+        self.checkCons = [] # secondary consensus
 
+# class for each species
 class Strain():
     def __init__(self, name, start):
-        self.name = name # str
-        self.start = start # int
-        self.seq = [] # list
+        self.name = name # str, name of strain
+        self.start = start # int, start position of the strain sequence
+        self.seq = [] # list, strain sequence
 
+# return length of the input sequence
 def getSeqLen(seq):
     return len(seq) - seq.count('-')
 
+# return data from each alignment string of input file
 def parseString(line):
     splitted = line.split()
     species = splitted[0].split('|', 1)[0]
@@ -29,15 +33,18 @@ def parseString(line):
     position = splitted[2]
     return species, strain, seq, position
 
+# return name of the output consensus file
 def getSmallOutFileName(species, suffix=''):
     return '%s.%s.%stxt' % (species.name.replace('|','.'), species.strainList[0].name.replace('|', '.'), suffix)
 
+# check that there is no gap in position of consensus
 def checkNoGapInSmallOutput(species, k):
     noGap = True
     if species.strainList[0].seq[k] == '-':
         noGap = False
     return noGap
 
+# print alignment block for consensus output file
 def printBlockInSmallOutput(species, outFile, start, end):
     for i in range(start, end):
         if checkNoGapInSmallOutput(species, i):
@@ -48,6 +55,7 @@ def printBlockInSmallOutput(species, outFile, start, end):
             outFile.write(species.consensus[i])
     outFile.write('\n')
 
+# print data for consensus output file
 def getSmallOutput(species, outFile, args):
     seqLen = len(species.strainList[0].seq)
     i = 0
@@ -56,6 +64,7 @@ def getSmallOutput(species, outFile, args):
         outFile.write('\n')
     printBlockInSmallOutput(species, outFile, i, seqLen)
 
+# print each number of gaps in divis output file
 def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
     tabBetween = 0
     if tab > 0:
@@ -69,6 +78,7 @@ def printBlockInGapCountOutput(species, outFile, args, start, end, tab=0):
     outFile.write(str(species.consensus[i:end].count('-')).ljust(tabBetween))
     outFile.write('\n')
 
+# print data for divis output file
 def getGapCountOutput(species, outFile, args):
     seqLen = len(species.strainList[0].seq)
     i = 0
@@ -76,6 +86,7 @@ def getGapCountOutput(species, outFile, args):
         printBlockInGapCountOutput(species, outFile, args, i - args.blockLen, i)
     printBlockInGapCountOutput(species, outFile, args, i, seqLen)
 
+# print data for alignment output file
 def getBigOutput(speciesList, outFile, args):
     seqLen = len(speciesList[0].strainList[0].seq)
 
@@ -87,11 +98,13 @@ def getBigOutput(speciesList, outFile, args):
             if nameLen > maxNameLen:
                 maxNameLen = nameLen
 
+    # print blocks of output alignment
     i = 0
     for i in range(args.blockLen, seqLen, args.blockLen):
         printBlockInBigOutput(speciesList, outFile, maxNameLen, args, i - args.blockLen, i) 
     printBlockInBigOutput(speciesList, outFile, maxNameLen, args, i, seqLen) 
 
+# print block of alignment for alignment output file
 def printBlockInBigOutput(speciesList, outFile, maxNameLen, args, start, end):
     # set spaces between columns
     tabFirst = 6
@@ -106,23 +119,27 @@ def printBlockInBigOutput(speciesList, outFile, maxNameLen, args, start, end):
         printBlockInGapCountOutput(species, outFile, args, start, end, tab=tabFirst + maxNameLen)
     outFile.write('\n\n')
 
+# create consensus output file
 def generateSmallOutputFile(speciesList, args):
     for species in speciesList:
         outFile = open(getSmallOutFileName(species), 'w', newline = args.lineBreakFormat)
         getSmallOutput(species, outFile, args)
         outFile.close()
 
+# create divis output file
 def generateGapCountFile(speciesList, args):
     for species in speciesList:
         outFile = open(getSmallOutFileName(species, suffix='divis.'), 'w', newline = args.lineBreakFormat)
         getGapCountOutput(species, outFile, args)
         outFile.close()
 
+# create alignment output file (Alignment.consensus.txt)
 def generateBigOutputFile(speciesList, args):
     outFile = open(args.outFileName, 'w', newline = args.lineBreakFormat)
     getBigOutput(speciesList, outFile, args)
     outFile.close()
 
+# create debugging output file (All.data.txt)
 def generateDebugFile(speciesList, args):
     outFile = open(args.debugFileName, 'w', newline = args.lineBreakFormat)
 
@@ -137,6 +154,7 @@ def generateDebugFile(speciesList, args):
 
     outFile.close()
 
+# return list of species from alignment of input file
 def parseInputFile(args):
     speciesList = []
     inFile = open(args.inFileName)
@@ -171,6 +189,7 @@ def parseInputFile(args):
 
     return speciesList
 
+# return secondary consensus for each position of species
 def strainBpConsensus(bpList):
     if '-' in bpList:
         consensusBp = '>'
@@ -182,6 +201,7 @@ def strainBpConsensus(bpList):
                 consensusBp = 'N'
     return consensusBp
 
+# check is this strain in this position could be distinguished from other strains 
 def getDiff(diffList):
     diff = ''
     if len(diffList) == 0:
@@ -192,6 +212,7 @@ def getDiff(diffList):
         diff = '-'
     return diff
 
+# check if there is at least two pair of the identical letters in position of secondary alignment
 def checkTwoPairs(bpList):
     commonList = collections.Counter(bpList).most_common(2)
     if len(commonList) == 2 and commonList[0][1] >= 2 and commonList[1][1] >= 2:
@@ -200,6 +221,7 @@ def checkTwoPairs(bpList):
         atLeastTwoPairs = False
     return atLeastTwoPairs
 
+# return consensus for each position of species
 def speciesBpConsensus(bpList):
     bpListLen = len(bpList)
     consensusBpList = ['0' for x in range(bpListLen)]
@@ -219,8 +241,9 @@ def speciesBpConsensus(bpList):
             consensusBpList[i] = getDiff(diffList)
     return consensusBpList
 
+# add consensus strings for list of species
 def getSpeciesConsensus(speciesList):
-    # get subsidiary string with strain consensus for each species
+    # get subsidiary string with secondary strain consensus for each species
     seqLen = len(speciesList[0].strainList[0].seq)
     for species in speciesList:
         for i in range(seqLen):
